@@ -1,3 +1,5 @@
+from datetime import datetime,timedelta
+#class representant un livre dans la biblio
 class Livre:
     def __init__(self, isbn, titre, auteur, genre, disponible=True):
         self.isbn = isbn
@@ -8,7 +10,7 @@ class Livre:
     
     def __str__(self):
         return f"{self.titre} de {self.auteur} ({self.genre}) - ISBN: {self.isbn} - {'Disponible' if self.disponible else 'Emprunter'}"
-
+#class representant un utilisateur de la biblio
 class Utilisateur:
     def __init__(self, user_id, nom, contact):
         self.user_id = user_id
