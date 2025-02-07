@@ -11,7 +11,7 @@ FICHIER_LIVRES = "livres.csv"
 FICHIER_UTILISATEURS = "users.csv"
 FICHIER_EMPRUNTS = "emprunts.csv"
 
-# Chargement des données
+# Chargement des donnes
 livres = charger_livres(FICHIER_LIVRES)
 utilisateurs = charger_utilisateurs(FICHIER_UTILISATEURS)
 emprunts = charger_emprunts(FICHIER_EMPRUNTS)
