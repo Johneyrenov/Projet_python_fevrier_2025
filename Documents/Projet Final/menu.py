@@ -72,12 +72,15 @@ class Menu:
             if choix == "1":
                 user_id = input("Entrer l'ID de utilisateur : ")
                 nom = input("Entrer le nom de l'utilisateur :")
-                contact = input("Saisir les infos de contact")
+                contact = input("Saisir les infos de contact : ")
                 self.bibliotheque.ajouter_utilisateur(user_id, nom, contact)
             elif choix == "2":
-                user_id = input("Entrer l'ID de utilisateur  a modifier: ")
-                nom = input("Entrer le nouveau nom de l'utilisateur(laisser vide pour rien changer) :")
-                contact = input("Saisir les nouvelles informations de contact(laisser vide pour aucun changment)")
+                 user_id = input("Entrer l'ID de l'utilisateur à modifier : ")
+                 nom = input("Entrer le nouveau nom de l'utilisateur (laisser vide pour rien changer) : ")
+                 contact = input("Saisir les nouvelles informations de contact (laisser vide pour aucun changement) : ")
+    # Passer les nouveaux arguments à modifier_utilisateur
+                 self.bibliotheque.modifier_utilisateur(user_id, nouveau_nom=nom if nom else None, nouveau_contact=contact if contact else None)
+
             elif choix == "3":
                 user_id = input("Entrer ID de l'utilsateur a supprimer : ") 
                 self.bibliotheque.supprimer_utilisateur(user_id)
@@ -99,8 +102,9 @@ class Menu:
             else:
                 print("Choix invalide.Reessayer!")
             
-            #Demarrer app et gerer interactions users
+            #Demarrer app 
     def demarrer(self):
+        try:
             while True:
                 self.Afficher_menu_principal()
                 choix = input("Faites votre choix : ")
@@ -112,7 +116,10 @@ class Menu:
                     print("Merci d'avoir utilisé notre système ! Au revoir !")
                     break
                 else:
-                    print("Choix invalide. Réessayez.")
+                    print("Choix invalide. Reessayez")
+        finally:
+            # Add donnees dans le fichier CSV
+            self.bibliotheque.save_data()
                 
 if __name__ == "__main__":
      menu = Menu()

@@ -1,26 +1,80 @@
-from classes import Livre
-from classes import Utilisateur
-from datetime import datetime,timedelta
+import csv
+from datetime import datetime, timedelta
+from classes import Utilisateur, Livre, Emprunt
+
 class bibliotheque:
     def __init__(self):
         self.livres = []
-        self.utilisateurs =[]
+        self.utilisateurs = []
         self.emprunts = []
-        #Methode pour les livres
-        #Ajouter livres
-    def ajouter_livre(self,isbn,titre,auteur,genre):
-        livre = Livre(isbn,titre,auteur,genre)
+        self.load_donnees()
+
+    # Charger les données depuis les fichiers CSV
+    def load_donnees(self):
+        try:
+            with open("livres.csv", mode="r", newline="", encoding="utf-8") as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    self.livres.append(Livre.from_dict(row))  
+        except FileNotFoundError:
+            print("Aucun fichier de livres trouvé. Un nouveau fichier sera créé.")
+
+        try:
+            with open("utilisateurs.csv", mode="r", newline="", encoding="utf-8") as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    self.utilisateurs.append(Utilisateur.from_dict(row))
+        except FileNotFoundError:
+            print("Aucun fichier d'utilisateurs trouvé. Un nouveau fichier sera créé.")
+
+        try:
+            with open("emprunts.csv", mode="r", newline="", encoding="utf-8") as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    self.emprunts.append(Emprunt.from_dict(row))
+        except FileNotFoundError:
+            print("Aucun fichier d'emprunts trouvé. Un nouveau fichier sera créé.")
+
+    # Sauvegarder les données dans les fichiers CSV
+    def save_data(self):
+        with open("livres.csv", mode="w", newline="", encoding="utf-8") as file:
+            fieldnames = ["isbn", "titre", "auteur", "genre", "disponible"]
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            for livre in self.livres:
+                writer.writerow(livre.to_dict())
+
+        with open("utilisateurs.csv", mode="w", newline="", encoding="utf-8") as file:
+            fieldnames = ["user_id", "nom", "contact"]
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            for utilisateur in self.utilisateurs:
+                writer.writerow(utilisateur.to_dict())
+
+        with open("emprunts.csv", mode="w", newline="", encoding="utf-8") as file:
+            fieldnames = ["user_id", "isbn", "date_emprunt", "date_retour_prevue", "retourne"]
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            for emprunt in self.emprunts:
+                writer.writerow(emprunt.to_dict())
+
+    # Ajouter un livre
+    def ajouter_livre(self, isbn, titre, auteur, genre):
+        livre = Livre(isbn, titre, auteur, genre)
         self.livres.append(livre)
-        print(f"Livre '{titre}' ajoute avec succes !")
-        
-        #Lister livre dispo
+        self.save_data()
+        print(f"Livre '{titre}' ajouté avec succès !")
+
+    # Lister les livres disponibles
     def lister_livres_disponibles(self):
-        if not self.livres:
+        livres_disponibles = [livre for livre in self.livres if livre.disponible]
+        if not livres_disponibles:
             print("Aucun livre disponible.")
         else:
-            for livre in self.livres:
+            for livre in livres_disponibles:
                 print(livre)
-    
+
+    # Mettre à jour un livre
     def mettre_a_jour_livre(self, isbn, titre, auteur, genre):
         for livre in self.livres:
             if livre.isbn == isbn:
@@ -30,104 +84,107 @@ class bibliotheque:
                     livre.auteur = auteur
                 if genre:
                     livre.genre = genre
-                print(f"Le livre avec ISBN {isbn} a été mis a jour")
+                self.save_data()
+                print(f"Le livre avec ISBN {isbn} a été mis à jour.")
                 return
         print(f"Aucun livre trouve avec ISBN {isbn}.")
-        
-    
-    def supprimer_livre(self, isbn):
-        for livre in self.livres:
-            if livre.isbn == isbn:
-                self.livres.remove(livre)
-                print(f"Le livre avec ISBN {isbn} a été supprimé.")
-                return
-        print(f"Aucun livre trouvé avec ISBN {isbn}.")
 
+    # Supprimer un livre
+    def supprimer_livre(self, isbn):
+        self.livres = [livre for livre in self.livres if livre.isbn != isbn]
+        self.save_data()
+        print(f"Livre avec ISBN {isbn} supprimé.")
+
+    # Rechercher un livre par titre
     def rechercher_livre_par_titre(self, titre):
         for livre in self.livres:
             if livre.titre.lower() == titre.lower():
                 print(livre)
                 return
-        print(f"Aucun livre trouvé avec le titre '{titre}'.")
-        
-    #Methodes pour les utilisateurs
+        print(f"Aucun livre trouve avec le titre '{titre}'.")
+
+    # Ajouter un utilisateur
     def ajouter_utilisateur(self, user_id, nom, contact):
         utilisateur = Utilisateur(user_id, nom, contact)
         self.utilisateurs.append(utilisateur)
+        self.save_data()
         print(f"Utilisateur '{nom}' ajouté avec succès!")
-        
+
+    # Supprimer un utilisateur
     def supprimer_utilisateur(self, user_id):
-        for utilisateur in self.utilisateurs:
-            if utilisateur.user_id == user_id:
-                self.utilisateurs.remove(utilisateur)
-                print(f"Utilisateur {user_id} supprimé.")
-                return
-        print(f"Aucun utilisateur trouvé avec ID {user_id}.")
-    
-    def lister_utilisateurs(self):
-        if not self.utilisateurs:
-            print("Aucun utilisateur inscrit.")
-        else:
-            for utilisateur in self.utilisateurs:
-                print(utilisateur)
-                
-    def rechercher_utilisateur_par_id(self, user_id):
-        for utilisateur in self.utilisateurs:
-            if utilisateur.user_id == user_id:
-                print(utilisateur)
-                return
-        print(f"Aucun utilisateur trouvé avec l'ID {user_id}.")
+        self.utilisateurs = [utilisateur for utilisateur in self.utilisateurs if utilisateur.user_id != user_id]
+        self.save_data()
+        print(f"Utilisateur {user_id} supprimé.")
         
-    #Methodes sur les emprunts
-    def preter_livre(self,user_id,isbn):
+    def modifier_utilisateur(self, user_id, nouveau_nom=None, nouveau_contact=None):
+    # Chercher l'utilisateur dans la liste
+        utilisateur = next((utilisateur for utilisateur in self.utilisateurs if utilisateur.user_id == user_id), None)
+
+        if utilisateur is None:
+              print(f"Aucun utilisateur trouvé avec l'ID {user_id}.")
+              return
+
+    # Mettre à jour les informations de l'utilisateur seulement si de nouvelles valeurs sont passées
+        if nouveau_nom:
+            utilisateur.nom = nouveau_nom
+        if nouveau_contact:
+                utilisateur.contact = nouveau_contact
+
+    # Sauvegarder les données après la modification
+        self.save_data()
+        print(f"Les informations de l'utilisateur avec l'ID {user_id} ont été mises à jour.")
+
+    
+    # Lister les utilisateurs
+    def lister_utilisateurs(self):
+        for utilisateur in self.utilisateurs:
+            print(utilisateur)
+
+    # Prêter un livre
+    def preter_livre(self, user_id, isbn):
         livre = next((livre for livre in self.livres if livre.isbn == isbn and livre.disponible), None)
-        if livre is None:
+        if not livre:
             print("Le livre n'est pas disponible.")
             return
-        #Verifier si user existe
-        utilisateur = next((utilisateur for utilisateur in self.utilisateurs if utilisateur.user_id == user_id), None)
-        if utilisateur is None:
-            print("Utilisateur non trouve")
+
+        utilisateur = next((u for u in self.utilisateurs if u.user_id == user_id), None)
+        if not utilisateur:
+            print("Utilisateur non trouvé.")
             return
-        #Enregistrer un emprunt
+
         date_emprunt = datetime.now()
-        date_retour_prevue = date_emprunt + timedelta(days=14)  
-        emprunt = emprunt(user_id, isbn, date_emprunt, date_retour_prevue)
-        
-      #Assigner l'emprunt a l'utilisateur et le mettre non disponible
-        utilisateur.emprunter(emprunt)
+        date_retour_prevue = date_emprunt + timedelta(days=14)
+        emprunt = Emprunt(user_id, isbn, date_emprunt, date_retour_prevue)
+
         livre.disponible = False
         self.emprunts.append(emprunt)
-        print(f"Le livre {livre.titre} a été prêté à {utilisateur.nom}.")
-         # Trouver l'emprunt en cours 
-    def retourner_livre(self, isbn):
-        emprunt = next((emprunt for emprunt in self.emprunts if emprunt.isbn == isbn and not emprunt.retourne), None)
-        if emprunt is None:
-            print("Aucun emprunt trouvé pour ce livre")
-            return
-        #Marquer emprunt retourne
-        emprunt.retourne = True
+        self.save_data()
+        print(f"Livre '{livre.titre}' prêté à {utilisateur.nom}.")
 
-        # Mettre à jour la disponibilité du livre
+    # Retourner un livre
+    def retourner_livre(self, isbn):
+        emprunt = next((e for e in self.emprunts if e.isbn == isbn and not e.retourne), None)
+        if not emprunt:
+            print("Aucun emprunt trouvé pour ce livre.")
+            return
+
+        emprunt.retourne = True
         livre = next((livre for livre in self.livres if livre.isbn == isbn), None)
         if livre:
             livre.disponible = True
 
-        print(f"Le livre {livre.titre} a été retourne")
-        
+        print(f"Livre '{livre.titre}' retourné avec succès.")
+
+    # Lister les livres en retard
     def lister_livres_en_retard(self):
         today = datetime.now()
-        livres_en_retard = [emprunt for emprunt in self.emprunts if not emprunt.retourne and emprunt.date_retour_prevue < today]
-        if not livres_en_retard:
-            print("Aucun livre en retard")
-        else:
-            for emprunt in livres_en_retard:
-                print(emprunt)
-                
+        retards = [e for e in self.emprunts if not e.retourne and e.date_retour_prevue < today]
+        for emprunt in retards:
+            print(emprunt)
+
+    # Générer des statistiques
     def generer_statistiques(self):
         total_emprunts = len(self.emprunts)
-        livres_retournes = len([emprunt for emprunt in self.emprunts if emprunt.retourne])
+        livres_retournes = sum(1 for e in self.emprunts if e.retourne)
         livres_en_retard = total_emprunts - livres_retournes
-        print(f"Total emprunts: {total_emprunts}")
-        print(f"Livres retournés: {livres_retournes}")
-        print(f"Livres en retard: {livres_en_retard}")
+        print(f"Total emprunts: {total_emprunts}, Livres retournés: {livres_retournes}, En retard: {livres_en_retard}")
