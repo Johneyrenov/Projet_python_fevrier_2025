@@ -33,10 +33,14 @@ class Livre:
         )
 #class representant un utilisateur de la biblio
 class Utilisateur:
-    def __init__(self, user_id, nom, contact):
+    def __init__(self, user_id, nom,prenom, telephone,adresse,activite,email):
         self.user_id = user_id
         self.nom = nom
-        self.contact = contact
+        self.prenom = prenom
+        self.telephone = telephone
+        self.adresse = adresse
+        self.activite = activite
+        self.email = email
         self.emprunts = []  
     
     def emprunter(self, emprunt):
@@ -46,7 +50,11 @@ class Utilisateur:
         return{
             "user_id" :self.user_id,
             "nom" : self.nom,
-            "contact": self.contact
+            "prenom" : self.prenom,
+            "telephone": self.telephone,
+            "adresse": self.adresse,
+            "activite": self.activite,
+            "email": self.email
         }
 #class methode
     @classmethod
@@ -54,7 +62,11 @@ class Utilisateur:
         return cls(
             user_id=data["user_id"],
             nom=data["nom"],
-            contact=data["contact"]
+            prenom=data["prenom"],
+            telephone=data["telephone"],
+            adresse=data["adresse"],
+            activite=data["activite"],
+            email=data["email"]
         )
     def retourner(self, isbn):
         for emprunt in self.emprunts:
@@ -63,36 +75,45 @@ class Utilisateur:
                 break
     
     def __str__(self):
-        return f"Utilisateur {self.nom} ({self.user_id}) - Contact : {self.contact}"
+        return f"Utilisateur {self.nom} ({self.user_id}) - telephone : {self.telephone} - adresse : {self.adresse} - activite : {self.activite} - email {self.adresse}"
 
 class Emprunt:
-    def __init__(self, user_id, isbn, date_emprunt, date_retour_prevue, retourne=False):
+    def __init__(self, user_id, isbn, date_emprunt, date_retour_prevue,retourne=False):
         self.user_id = user_id
         self.isbn = isbn
         self.date_emprunt = date_emprunt
         self.date_retour_prevue = date_retour_prevue
-        self.retourne = retourne  
-    
-    def __str__(self):
-        return f"Emprunt de {self.isbn} par {self.user_id} - Date d'emprunt: {self.date_emprunt} - Retour prevu le: {self.date_retour_prevue} - {'Retourner' if self.retourne else 'Non retourner'}"
- #methode pour convertir objet emprunt en dictionaire pour stockage CSV
+        self.retourne = retourne  # Par défaut, le livre n'est pas retourné
+
     def to_dict(self):
-        return{
+        return {
             "user_id": self.user_id,
             "isbn": self.isbn,
-            "date_emprunt": self.date_emprunt.strftime("%Y-%m-%d"),
-            "date_retour_prevue": self.date_retour_prevue.strftime("%Y-%m-%d"),
-            "retourne" : self.retourne
-          
+            "date_emprunt": self.date_emprunt.strftime('%d/%m/%Y'),
+            "date_retour_prevue": self.date_retour_prevue.strftime('%d/%m/%Y'),
+            "retourne": str(self.retourne)
         }
+        
+    @classmethod
+    def from_dict(cls, data):
+        date_emprunt = datetime.strptime(data["date_emprunt"], '%d/%m/%Y')
+        date_retour_prevue = datetime.strptime(data["date_retour_prevue"], '%d/%m/%Y')
+        retourne = data["retourne"].lower() == "true"  # Convertir en booléen
+        return cls(
+            user_id=data["user_id"],
+            isbn=data["isbn"],
+            date_emprunt=date_emprunt,
+            date_retour_prevue=date_retour_prevue,
+            retourne=retourne
+        )
 #class methode pour creer un objet emprunt a partir d'un dict(CSV loading)
     @classmethod
     def from_dict(cls,data):
         return cls(
             user_id=data["user_id"],
             isbn=data["isbn"],
-            date_emprunt=datetime.strptime(data["date_emprunt"], "%Y-%m-%d"),
-            date_retour_prevue=datetime.strptime(data["date_retour_prevue"], "%Y-%m-%d"),
+            date_emprunt=datetime.strptime(data["date_emprunt"], "%d/%m/%Y"),
+            date_retour_prevue=datetime.strptime(data["date_retour_prevue"], "%d/%m/%Y"),
             retourne=data["retourne"]
             
         )
